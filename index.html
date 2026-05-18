@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Off Market Glass</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      font-family: system-ui, sans-serif;
+      padding: 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    p.tagline {
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    input[type="email"] {
+      flex: 1;
+      padding: 0.65rem 0.875rem;
+      border: 1.5px solid #d0d0d0;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="email"]:focus {
+      border-color: #000;
+    }
+
+    button {
+      padding: 0.65rem 1.25rem;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      min-height: 1.25em;
+    }
+
+    .message.success { color: #16a34a; }
+    .message.error   { color: #dc2626; }
+
+    /* Small phones (< 400px) */
+    @media (max-width: 399px) {
+      h1 { font-size: 1.4rem; }
+
+      form { flex-direction: column; }
+
+      button { width: 100%; }
+    }
+
+    /* Tablets and up (≥ 768px) */
+    @media (min-width: 768px) {
+      h1 { font-size: 2rem; }
+
+      .container { max-width: 480px; }
+    }
+
+    /* Desktop (≥ 1024px) */
+    @media (min-width: 1024px) {
+      h1 { font-size: 2.25rem; }
+
+      .container { max-width: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Off Market Glass</h1>
+    <p class="tagline">Sign up to stay in the loop.</p>
+    <form id="signup">
+      <input type="email" placeholder="your@email.com" required autocomplete="email">
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="message" id="msg"></p>
+  </div>
+
+  <script>
+    const WORKER_URL = 'https://beehiv-proxy.me-c2f.workers.dev/';
+
+    document.getElementById('signup').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form   = e.target;
+      const btn    = form.querySelector('button');
+      const msg    = document.getElementById('msg');
+      const email  = form.querySelector('input').value.trim();
+
+      btn.disabled = true;
+      msg.textContent = '';
+      msg.className = 'message';
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        if (res.ok) {
+          msg.textContent = "You're in. Talk soon.";
+          msg.className = 'message success';
+          form.reset();
+        } else {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || 'Something went wrong.');
+        }
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'message error';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
